@@ -1,0 +1,73 @@
+{
+  "name": "javaneh-sabz",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "start": "vinext start",
+    "test": "npm run build && node --test tests/rendered-html.test.mjs",
+    "qa:routes": "node --env-file=.env scripts/qa-routes.mjs",
+    "qa:auth": "node --env-file=.env scripts/qa-auth.mjs",
+    "qa:persistence:create": "node --env-file=.env scripts/qa-persistence.mjs create",
+    "qa:persistence:verify": "node --env-file=.env scripts/qa-persistence.mjs verify",
+    "qa:persistence:cleanup": "node --env-file=.env scripts/qa-persistence.mjs cleanup",
+    "qa:e2e": "node --env-file=.env node_modules/@playwright/test/cli.js test",
+    "qa:e2e:update": "node --env-file=.env node_modules/@playwright/test/cli.js test --update-snapshots",
+    "qa:full": "npm run typecheck && npm run lint && npm test && npm run qa:routes && npm run qa:auth && npm run qa:e2e",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern FINAL_DEPLOYMENT --ignore-pattern FINAL_DEPLOYMENT_V2 --ignore-pattern FINAL_DEPLOYMENT_V3 --ignore-pattern BACKUP_STABLE_PRE_MEDIA --ignore-pattern tests/.results --ignore-pattern tests/.report",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "db:local": "node --env-file=.env scripts/local-db.mjs start",
+    "db:local:stop": "node --env-file=.env scripts/local-db.mjs stop",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node prisma/seed.mjs",
+    "preview:production": "node scripts/start-local.mjs"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "6.19.0",
+    "@prisma/client": "6.19.0",
+    "bcryptjs": "3.0.2",
+    "drizzle-orm": "0.45.2",
+    "pg": "8.16.3",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "zod": "4.1.12"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.37.1",
+    "@embedded-postgres/windows-x64": "18.4.0-beta.17",
+    "@eslint/js": "9.39.4",
+    "@next/eslint-plugin-next": "16.2.6",
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/postcss": "4.2.1",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "drizzle-kit": "0.31.10",
+    "embedded-postgres": "18.4.0-beta.17",
+    "eslint": "9.39.4",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "16.4.0",
+    "prettier": "3.6.2",
+    "prisma": "6.19.0",
+    "react-server-dom-webpack": "19.2.6",
+    "tailwindcss": "4.2.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.59.3",
+    "vinext": "1.0.0-beta.2",
+    "vite": "8.0.13",
+    "wrangler": "4.92.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
+  },
+  "type": "module"
+}

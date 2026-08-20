@@ -1,0 +1,71 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+/tests/.results
+/tests/.report
+
+# next.js
+/.next/
+/.vinext/
+/out/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+/dist/
+/.wrangler/
+/outputs/
+/work/
+/data/local-postgres/
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Local databases and runtime data
+/data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Local backups and deployment packages
+/BACKUP_PRE_RUNFLARE_RELEASE/
+/BACKUP_STABLE_PRE_MEDIA/
+/FINAL_DEPLOYMENT/
+/FINAL_DEPLOYMENT_V2/
+/FINAL_DEPLOYMENT_V3/
+/RUNFLARE_DEPLOYMENT/
+
+# Local AI / workspace files
+/.openai/
+.persistence-test-id
+
+# Local build and TypeScript cache
+/build/
+*.tsbuildinfo
+
+# OS/editor temporary files
+Thumbs.db
+desktop.ini

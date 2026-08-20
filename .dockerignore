@@ -1,0 +1,13 @@
+node_modules
+dist
+.next
+.vinext
+.wrangler
+.git
+.env
+data
+FINAL_DEPLOYMENT
+FINAL_DEPLOYMENT_V2
+npm-debug.log*
+public/uploads/*
+!public/uploads/.gitkeep

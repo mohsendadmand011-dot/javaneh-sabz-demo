@@ -1,0 +1,432 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  CUSTOMER
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String
+  name          String
+  role          Role       @default(CUSTOMER)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  customer      Customer?
+  articles      Article[]
+  auditLogs     AuditLog[]
+  sessions      Session[]
+  uploadedMedia Media[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, expiresAt])
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mobile    String?
+  orders    Order[]
+  addresses Address[]
+  wishlist  Wishlist?
+  createdAt DateTime  @default(now())
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  province   String
+  city       String
+  address    String
+  postalCode String
+  createdAt  DateTime @default(now())
+
+  @@index([customerId])
+}
+
+model Category {
+  id        String        @id @default(cuid())
+  name      String
+  slug      String        @unique
+  order     Int           @default(0)
+  visible   Boolean       @default(true)
+  status    PublishStatus @default(PUBLISHED)
+  products  Product[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Product {
+  id                String            @id @default(cuid())
+  name              String
+  slug              String            @unique
+  sku               String            @unique
+  description       String
+  shortDescription  String?
+  price             Decimal?          @db.Decimal(14, 0)
+  previousPrice     Decimal?          @db.Decimal(14, 0)
+  contactForPrice   Boolean           @default(false)
+  stock             Int               @default(0)
+  featured          Boolean           @default(false)
+  popular           Boolean           @default(false)
+  status            PublishStatus     @default(DRAFT)
+  usageInstructions String?
+  benefits          Json?
+  specifications    Json?
+  seoTitle          String?
+  metaDescription   String?
+  categoryId        String
+  category          Category          @relation(fields: [categoryId], references: [id])
+  images            ProductImage[]
+  videos            ProductVideo[]
+  documents         ProductDocument[]
+  orderItems        OrderItem[]
+  wishlistItems     WishlistItem[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([categoryId, status])
+}
+
+model ProductVideo {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  mediaId   String
+  media     Media   @relation(fields: [mediaId], references: [id])
+  order     Int     @default(0)
+
+  @@unique([productId, mediaId])
+  @@index([productId, order])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  mediaId   String?
+  media     Media?  @relation(fields: [mediaId], references: [id])
+  url       String
+  alt       String?
+  order     Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  @@index([productId, order])
+}
+
+model ProductDocument {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  title     String
+  url       String
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  number     String      @unique
+  customerId String?
+  customer   Customer?   @relation(fields: [customerId], references: [id])
+  status     OrderStatus @default(PENDING)
+  firstName  String
+  lastName   String
+  mobile     String
+  email      String?
+  province   String
+  city       String
+  address    String
+  postalCode String
+  notes      String?
+  subtotal   Decimal     @db.Decimal(14, 0)
+  shipping   Decimal     @default(0) @db.Decimal(14, 0)
+  total      Decimal     @db.Decimal(14, 0)
+  items      OrderItem[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([customerId, status])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  productName String
+  sku         String
+  price       Decimal  @db.Decimal(14, 0)
+  quantity    Int
+  imageUrl    String?
+}
+
+model Wishlist {
+  id         String         @id @default(cuid())
+  customerId String         @unique
+  customer   Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items      WishlistItem[]
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  wishlistId String
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistId, productId])
+}
+
+model ArticleCategory {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  articles Article[]
+}
+
+model ArticleTag {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  articles Article[]
+}
+
+model Article {
+  id              String           @id @default(cuid())
+  title           String
+  slug            String           @unique
+  excerpt         String
+  cover           String?
+  coverMediaId    String?
+  coverMedia      Media?           @relation("ArticleCover", fields: [coverMediaId], references: [id])
+  media           ArticleMedia[]
+  content         String
+  status          PublishStatus    @default(DRAFT)
+  seoTitle        String?
+  metaDescription String?
+  authorId        String
+  author          User             @relation(fields: [authorId], references: [id])
+  categoryId      String?
+  category        ArticleCategory? @relation(fields: [categoryId], references: [id])
+  tags            ArticleTag[]
+  publishedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+model Representative {
+  id           String        @id @default(cuid())
+  name         String
+  province     String
+  city         String
+  phone        String?
+  mobile       String
+  address      String
+  whatsapp     String?
+  workingHours String?
+  mapUrl       String?
+  status       PublishStatus @default(PUBLISHED)
+
+  @@index([province, city])
+}
+
+model Event {
+  id              String        @id @default(cuid())
+  title           String
+  description     String
+  cover           String?
+  coverMediaId    String?
+  coverMedia      Media?        @relation("EventCover", fields: [coverMediaId], references: [id])
+  startsAt        DateTime
+  location        String
+  capacity        Int?
+  registrationUrl String?
+  status          PublishStatus @default(DRAFT)
+}
+
+model Media {
+  id               String         @id @default(cuid())
+  name             String
+  originalFilename String
+  storedFilename   String         @unique
+  url              String
+  mimeType         String
+  fileType         String
+  size             Int
+  width            Int?
+  height           Int?
+  duration         Int?
+  alt              String?
+  caption          String?
+  storageKey       String         @unique
+  uploadedByUserId String?
+  uploadedBy       User?          @relation(fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+  productImages    ProductImage[]
+  productVideos    ProductVideo[]
+  articleCovers    Article[]      @relation("ArticleCover")
+  articleMedia     ArticleMedia[]
+  eventCovers      Event[]        @relation("EventCover")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([fileType, createdAt])
+  @@index([uploadedByUserId])
+}
+
+model ArticleMedia {
+  id        String  @id @default(cuid())
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  mediaId   String
+  media     Media   @relation(fields: [mediaId], references: [id])
+  role      String  @default("INLINE")
+  order     Int     @default(0)
+  caption   String?
+
+  @@unique([articleId, mediaId, role])
+  @@index([articleId, order])
+}
+
+model Page {
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
+  status          PublishStatus @default(DRAFT)
+  seoTitle        String?
+  metaDescription String?
+  sections        PageSection[]
+  updatedAt       DateTime      @updatedAt
+}
+
+model PageSection {
+  id      String  @id @default(cuid())
+  pageId  String
+  page    Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  type    String
+  title   String?
+  data    Json
+  enabled Boolean @default(true)
+  order   Int     @default(0)
+
+  @@index([pageId, order])
+}
+
+model Menu {
+  id       String     @id @default(cuid())
+  name     String
+  location String     @unique
+  items    MenuItem[]
+}
+
+model MenuItem {
+  id       String     @id @default(cuid())
+  menuId   String
+  menu     Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parentId String?
+  parent   MenuItem?  @relation("MenuTree", fields: [parentId], references: [id])
+  children MenuItem[] @relation("MenuTree")
+  label    String
+  url      String
+  order    Int        @default(0)
+  visible  Boolean    @default(true)
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  mobile    String
+  email     String?
+  subject   String?
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+}
+
+model Discount {
+  id       String    @id @default(cuid())
+  name     String
+  percent  Int?
+  amount   Decimal?  @db.Decimal(14, 0)
+  startsAt DateTime?
+  endsAt   DateTime?
+  active   Boolean   @default(true)
+}
+
+model Coupon {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  percent    Int?
+  amount     Decimal?  @db.Decimal(14, 0)
+  usageLimit Int?
+  used       Int       @default(0)
+  startsAt   DateTime?
+  endsAt     DateTime?
+  active     Boolean   @default(true)
+}
