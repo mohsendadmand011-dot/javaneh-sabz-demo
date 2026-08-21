@@ -10,3 +10,4 @@ tests
 admin
 dist
 .vercel
+.env*
